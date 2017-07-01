@@ -1,0 +1,176 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/night.css">
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-background-image="images/shed.jpg">
+          <h3 style="background-color: rgba(0,0,0,0.25); display: inline-block; padding: .25rem 1rem">Make Sheds Great Again</h3>
+          <ul style="background-color: rgba(0,0,0,0.25)">
+            <li class="fragment">How was this shed built?</li>
+            <li class="fragment">How is it so strong?</li>
+            <li class="fragment">Structure vs Colour</li>
+          <ul>
+        </section>
+				<section>
+          <h3>Blockchain</h3>
+          <h5>There are many videos. I chose this one.</h5>
+          <iframe width="640" height="360" src="//www.youtube.com/embed/1kp15UrRtQs" frameborder="0" allowfullscreen></iframe>
+        </section>
+				<section>
+          <h3>Ethereum</h3>
+          <ul>
+            <li class="fragment"><h6>The most advanced implementation</h6></li>
+            <li class="fragment"><h6>Invented by Vitalik Buterin age 19<h6></li>
+          <ul>
+          <img class="fragment" src="images/ethereum-price-crash-vitalik-alive.jpg" width="525" />
+        </section>
+				<section>
+          <h3>Tokens &amp; Digital Assets</h3>
+          <ul>
+            <li class="fragment"><h6>Domain names (lectureclub.eth)</h6></li>
+            <li class="fragment"><h6>Game assets, provable scarcity<h6></li>
+            <li class="fragment"><h6>Stocks, bonds, gold, fiat (£,$)<h6></li>
+            <li class="fragment"><h6>App/Protocol tokens - incentivised social sharing<h6></li>
+            <li class="fragment"><h6>Transferable digital identity, reputation<h6></li>
+          <ul>
+        </section>
+				<section>
+          <h3>Exchange demo</h3>
+	<pre style="width: 90%">
+    <code class="solidity" data-trim style="max-height: 480px">
+pragma solidity ^0.4.11;
+
+import "./ERC20.sol";
+
+contract Exchange {
+
+  enum Status { Open, Cancel, Close }
+
+  struct Offer {
+    address offeror;
+    uint256 amount;
+    uint256 value;
+    Status status;
+  }
+
+  mapping(address => Offer[]) public bids;
+  mapping(address => Offer[]) public asks;
+
+  event BidOpen(uint256 id, address tokenAddress, address offeror, uint256 amount, uint256 value);
+  event AskOpen(uint256 id, address tokenAddress, address offeror, uint256 amount, uint256 value);
+
+  // wants to buy token, deposits eth & opens bid
+  function bid(address _tokenAddress, uint256 _amount) payable {
+    // contract takes custody of msg.value
+    Offer memory o;
+    o.offeror = msg.sender;
+    o.amount = _amount;
+    o.value = msg.value;
+    o.status = Status.Open;
+    uint256 id = bids[_tokenAddress].push(o) - 1;
+
+    BidOpen(id, _tokenAddress, msg.sender, _amount, msg.value);
+  }
+
+  // wants to sell token, deposits token & opens bid
+  function ask(address _tokenAddress, uint256 _amount, uint256 _value){
+    ERC20 token = ERC20(_tokenAddress);
+    // verify seller has permitted contract to transfer tokens
+    require( token.allowance(msg.sender, this) >= _amount );
+    // take custody of tokens
+    assert( token.transferFrom(msg.sender, this, _amount) );
+    // push returns length, so id is last item index or length - 1
+    Offer memory o;
+    o.offeror = msg.sender;
+    o.amount = _amount;
+    o.value = _value;
+    o.status = Status.Open;
+    uint256 id = asks[_tokenAddress].push(o) - 1;
+
+    AskOpen(id, _tokenAddress, msg.sender, _amount, _value);
+  }
+
+  // seller calls this on a bid
+  function sell(address _tokenAddress, uint256 _id) returns (bool){
+    Offer o = bids[_tokenAddress][_id];
+    ERC20 token = ERC20(_tokenAddress);
+    // verify seller has permitted contract to transfer tokens
+    require( token.allowance(msg.sender, this) >= o.amount );
+    // transfer seller tokens to buyer (offeror)
+    assert( token.transferFrom(msg.sender, o.offeror, o.amount) );
+    // send custody eth to seller
+    o.offeror.transfer(o.value);
+
+    return true;
+  }
+
+  // buyer calls this on an ask
+  function buy(address _tokenAddress, uint256 _id) payable returns (bool){
+    Offer o = asks[_tokenAddress][_id];
+    // is buyer paying the right amount?
+    require( msg.value == o.value );
+    // send tokens to buyer
+    assert( ERC20(_tokenAddress).transfer(msg.sender, o.amount) );
+    // send eth to seller
+    o.offeror.transfer(msg.value);
+
+    return true;
+  }
+
+}
+	</code>
+</pre>
+        </section>
+				<section>
+          <h3>Ethereum in numbers</h3>
+          <ul>
+            <li><h6>0.45GW (Cyprus)</h6></li>
+            <li><h6>Transaction cost $0-$6000<h6></li>
+            <li><h6>Ether market cap ~$27b<h6></li>
+            <li><h6>Etherum based assets ~$1b<h6></li>
+          <ul>
+        </section>
+				<section>
+          <h3>Is it novel?</h3>
+          <ul>
+            <li class="fragment"><h6>High bar to justify costs</h6></li>
+            <li class="fragment"><h6>Transactions without third parties ("trustless")</h6></li>
+            <li class="fragment"><h6>An incorruptible, globaly shared spreadsheet</h6></li>
+            <li class="fragment"><h6>A world computer</h6></li>
+          <ul>
+        </section>
+				<section>
+          <h3>Questions?</h3>
+        </section>
+			</div>
+		</div>
+		<script src="js/reveal.js"></script>
+    <script type="text/javascript" src="js/head.min.js"></script>
+    <script type="text/javascript" src="js/solidity.js"></script>
+		<script>
+			Reveal.initialize({
+        dependencies: [
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() {
+            hljs.registerLanguage('solidity', window.hljsDefineSolidity);
+            hljs.initHighlightingOnLoad();
+          }},
+        ],
+        history: true
+      });
+		</script>
+	</body>
+</html>
+
+# What is novel?
+
+can we justify those costs?
+trustless database
+what does it mean that we can do something without a third party
+when you remove
+consider a transaction between two people
+between two companies
+between people in separate countries
